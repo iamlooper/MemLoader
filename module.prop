@@ -1,0 +1,6 @@
+id=xload
+name=XLoad
+version=v0.1
+versionCode=06
+author=@iamloooper
+description=Load any android app or file in physical RAM to achieve better read ahead speed and I/O scheduling for that file
