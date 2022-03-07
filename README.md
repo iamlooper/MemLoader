@@ -23,6 +23,3 @@ Consider, you are playing a game and game sucks in loading animations and textur
 - If device starts to lag after loading data or at the process of loading. Then, it is clear that you are on low RAM. To fix it, just reboot your device, all loaded data will get unloaded and your device will be back at normal
 
 - Don't provide file paths with spaces i.e /storage/emulated/0/Music/Never Gonna Give Up.mp3, they won't work. Consider, using file paths like /storage/emulated/0/Music/Never_Gonna_Give_Up.mp3
-
-- While unloading a app, you will see a long file path of it, that's the actual file path that a user android app has in android system. Copy that file path and unload it. Don't provide package name, it won't work
-
