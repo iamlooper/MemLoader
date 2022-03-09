@@ -25,3 +25,7 @@ To open **XLoad™** Menu, use `su -c xload` in Termux and any other terminal em
 - Locking android app or file/folder into RAM doesn't increase power consumption. It decreases power consumption due to better I/O scheduling as it is locked in RAM which is faster than internal disks
 
 - Don't provide file paths with spaces i.e /storage/emulated/0/Music/Never Gonna Give Up.mp3, they won't work. Consider, using file paths like /storage/emulated/0/Music/Never_Gonna_Give_Up.mp3
+
+# Download
+
+Go to [here](https://www.pling.com/p/1726993/) to download XLoad™ builds
