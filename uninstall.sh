@@ -1,3 +1,5 @@
+rm -rf "/storage/emulated/0/XLoad"
+
 # Don't modify anything after this
 [[ -f "$INFO" ]] && {
   while read LINE; do

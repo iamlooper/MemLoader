@@ -1,6 +1,6 @@
 id=xload
 name=XLoad
-version=v0.2
-versionCode=23
-author=@iamloooper
+version=v0.3
+versionCode=38
+author=iamlooper @ telegram
 description=Load any android app or file in physical RAM to achieve better read ahead speed and I/O scheduling for that file

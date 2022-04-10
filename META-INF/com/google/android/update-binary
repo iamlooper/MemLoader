@@ -14,7 +14,7 @@ rm -rf "$TMPDIR" 2>/dev/null
 mkdir -p "$TMPDIR"
 
 # Echo before loading util_functions
-ui_print() { echo "$1"; }
+ui_print() { echo "$@"; }
 
 load_vksel() { source "$MODPATH/addon/Volume-Key-Selector/install.sh"; }
 
@@ -132,6 +132,7 @@ rmtouch "$MODPATH/addon"
 rmtouch "$MODPATH/setup.sh"
 rmtouch "$MODPATH/LICENSE"
 rmtouch "$MODPATH/README.md"
+rmtouch "$MODPATH/changelog.md"
 rmtouch "$MODPATH/system/placeholder"
 
 ##############

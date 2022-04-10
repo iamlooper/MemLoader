@@ -64,7 +64,7 @@ set_permissions() {
 
 # Set what you want to be displayed on header of installation process
 info_print() {
-  awk '{print}' "$MODPATH/xload_banner"
+  ui_print "$(awk '{print}' "$MODPATH/xload_banner")"
   ui_print ""
 
   sleep 0.5
@@ -119,7 +119,7 @@ int_main() {
   ui_print ""
   ui_print "[*] Join @loopprojects on Telegram to get XLoad™ updates"
   ui_print ""
-  ui_print "[*] You can find me at iamloooper @ Telegram for direct support"
+  ui_print "[*] You can find me at iamlooper @ Telegram for direct support"
 
   sleep 2.5  
 }
