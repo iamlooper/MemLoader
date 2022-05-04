@@ -2,15 +2,15 @@
 
 # XLoad
 
-Load any android app or file in physical RAM
+Load any android app or file in physical RAM.
 
 ## What is XLoad™ ?
 
-**XLoad™** is a magisk module which is capable of locking android files directly into physical RAM which benefits in increasing readahead speeds and better I/O scheduling with no jitters or lags for that specified file
+**XLoad™** is a magisk module which is capable of locking android files directly into physical RAM which benefits in increasing readahead speeds and better I/O scheduling with no jitters or lags for that specified file.
 
 ## How to use it ?
 
-To open **XLoad™** Menu, use `su -c xload` in Termux and any other terminal emulator. Consider, you are playing a game and game sucks in loading animations and textures and also lags too. Then, just use **XLoad™**, load its data and if it has .obb then load it also. After loading, try to play the game, you will feel smoother animations, fast texture loading and better gameplay experience. Because, using RAM is faster than internal disks. You can also use this in loading music or a movie or anything you want to load in RAM
+To open **XLoad™** Menu, use `su -c xload` in Termux and any other terminal emulator. Consider, you are playing a game and game sucks in loading animations and textures and also lags too. Then, just use **XLoad™**, load its data and if it has .obb then load it also. After loading, try to play the game, you will feel smoother animations, fast texture loading and better gameplay experience. Because, using RAM is faster than internal disks. You can also use this in loading music or a movie or anything you want to load in RAM.
 
 ## Notes
 

@@ -1,5 +1,12 @@
 # Changelog
 
+## v0.4
+
+- Added option to turn off auto locking feature
+- Integrated XLoad service optimization feature (Protection of loaded data in OOM cases)
+- Enhanced XLoad locking logic
+- Miscellaneous bug fixes & changes
+
 ## v0.3
 
 - Added auto locking service (Now, stuff in XLoad list will be automatically locked into RAM after reboot)

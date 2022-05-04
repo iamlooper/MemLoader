@@ -8,15 +8,14 @@
 # Config Vars
 ############
 
-# Uncomment if you want to skip mount for your module
-#SKIPMOUNT=true
-# Uncomment if you want to clean old files in module before injecting new module
-#CLEANSERVICE=true
-# Uncomment if you want to load vskel after module info print. If you want to manually load it, consider using load_vksel function
-#AUTOVKSEL=true
-# Uncomment DEBUG if you want store debug logs of installation
-DEBUG=true
-
+# Set this to true if you want to skip mount for your module
+SKIPMOUNT="false"
+# Set this to true if you want to clean old files in module before injecting new module
+CLEANSERVICE="false"
+# Set this to true if you want to load vskel after module info print. If you want to manually load it, consider using load_vksel function
+AUTOVKSEL="false"
+# Set this to true if you want store debug logs of installation
+DEBUG="true"
 
 ############
 # Replace List
@@ -35,27 +34,14 @@ REPLACE="
 "
 
 ############
-# Cleanup
-############
-
-# Remove unnecessary stuff
-do_cleanup() {
-  rmtouch "$MODPATH/system/placeholder"
-  rmtouch "$MODPATH/system/bin/xload32"
-  rmtouch "$MODPATH/system/bin/xload64"
-  rmtouch "$MODPATH/bin/vmtouch32"
-  rmtouch "$MODPATH/bin/vmtouch64"  
-}
-
-############
 # Permissions
 ############
 
 # Set permissions
 set_permissions() {
   set_perm_recursive "$MODPATH" 0 0 0777 0755
-  set_perm_recursive "$MODPATH/system/bin" 0 0 0777 0755  
   set_perm_recursive "$MODPATH/bin" 0 0 0777 0755    
+  set_perm_recursive "$MODPATH/system/bin" 0 0 0777 0755  
 }
 
 ############
@@ -80,7 +66,7 @@ info_print() {
 ############
 
 # Change the logic to whatever you want
-int_main() {
+init_main() {
   ui_print "[*] Installing XLoad™ into system..."
   ui_print ""
 
