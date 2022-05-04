@@ -8,12 +8,12 @@ rm -rf "/storage/emulated/0/XLoad"
     elif [[ -f "$LINE~" ]]; then
       mv -f "$LINE~" "$LINE"
     else
-      rm -f "$LINE"
+      rm -rf "$LINE"
       while true; do
-        LINE=$(dirname $LINE)
+        LINE="$(dirname "$LINE")"
         [[ "$(ls -A $LINE 2>/dev/null)" ]] && break 1 || rm -rf "$LINE"
       done
     fi
-  done < $INFO
-  rm -f "$INFO"
+  done < "$INFO"
+  rm -rf "$INFO"
 }
