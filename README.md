@@ -1,4 +1,4 @@
-![XLoad](https://github.com/iamlooper/XLoad/raw/main/xload.jpg)
+![XLoad](https://github.com/iamlooper/XLoad/raw/main/xload.png)
 
 # XLoad
 

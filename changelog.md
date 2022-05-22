@@ -1,5 +1,11 @@
 # Changelog
 
+## v0.5
+
+- Using `mlockall` instead of `mlock` (Locks all data into memory)
+- Removed XLoad service optimization (Affecting I/O performance of loaded data)
+- Miscellaneous changes & fixes
+
 ## v0.4
 
 - Added option to turn off auto locking feature
