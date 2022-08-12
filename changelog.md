@@ -1,5 +1,14 @@
 # Changelog
 
+## v0.6
+
+- Improved menu
+- Refined overall code
+- Added auto locking on app launch feature
+- Added new unloading logic
+- Fixed some issues
+- Misc. bug fixes
+
 ## v0.5
 
 - Using `mlockall` instead of `mlock` (Locks all data into memory)
