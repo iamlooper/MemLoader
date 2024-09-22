@@ -1,0 +1,367 @@
+#!/system/bin/sh
+# MemLoader
+# Author: Looper (iamlooper @ github)
+
+############
+# Variables
+############
+
+MODDIR="/data/adb/modules/memloader"
+USERDIR="/storage/emulated/0/MemLoader"
+LOG_FILE="$USERDIR/memloader.log"
+CONFIG_FILE="$USERDIR/memloader.conf"
+PATH="$MODDIR/libs:$PATH"
+
+##################
+# Misc. Functions
+##################
+
+# Logging function
+log() {
+    local log_type=""
+    local timestamp=$(date '+%Y-%m-%d %H:%M:%S')
+    
+    case $1 in
+        1) log_type="INFO" ;;
+        2) log_type="WARNING" ;;
+        3) log_type="ERROR" ;;
+        0) log_type="UNKNOWN" ;;
+    esac
+    
+    echo "[${timestamp}] [${log_type}] $2" >> "$LOG_FILE"
+}
+
+# Clear log file
+clear_log() {
+    rm -f "$LOG_FILE"
+}
+
+# Wrapper to fix cmd service call failure
+pm() {
+    printf '%s' "$(command pm "$@" < /dev/null 2>&1)"
+}
+
+read_config_value() {
+    local key="$1"
+    grep "^$key=" "$CONFIG_FILE" | cut -d'=' -f2-
+}
+
+write_config_value() {
+    local key="$1"
+    local value="$2"
+    sed -i "s|^$key=.*|$key=$value|" "$CONFIG_FILE"
+}
+
+initialize_essentials() {
+    mkdir -p "$USERDIR"
+    [ -f "$LOG_FILE" ] && rm -rf "$LOG_FILE"
+    
+    if [ ! -f "$CONFIG_FILE" ]; then
+        echo "load_on_boot=true" > "$CONFIG_FILE"
+        echo "loaded_apps=" >> "$CONFIG_FILE"
+        echo "loaded_paths=" >> "$CONFIG_FILE"
+    fi
+}
+
+start_logging_service() {
+    log 1 "MemLoader is running..."
+}
+
+load_on_boot_service() {
+    if [ "$(read_config_value load_on_boot)" = "true" ]; then
+        loaded_apps=$(read_config_value loaded_apps)
+        loaded_paths=$(read_config_value loaded_paths)
+        if [ -n "$loaded_apps" ]; then
+            log 1 "MemLoader app list detected! Loading apps in list into RAM..."
+            echo "$loaded_apps" | tr ',' '\n' | while read -r app; do
+                if [ -n "$app" ]; then
+                    log 1 "Loading $app in RAM..."
+                    load_app_in_ram "$app"
+                fi
+            done
+        fi
+        if [ -n "$loaded_paths" ]; then
+            log 1 "MemLoader path list detected! Loading paths in list into RAM..."
+            echo "$loaded_paths" | tr ',' '\n' | while read -r encoded_path; do
+                path=$(echo "$encoded_path" | base64 -d)
+                if [ -n "$path" ]; then
+                    log 1 "Loading $path in RAM..."
+                    load_from_path_to_ram "$path"
+                fi
+            done
+        fi
+    else
+        write_config_value "loaded_apps" ""
+        write_config_value "loaded_paths" ""
+    fi
+}
+
+grep_prop() {
+    regex="s/^$1=//p"
+    shift
+    files="$@"
+    sed -n "$regex" "$files" 2>/dev/null | head -n 1
+}
+
+get_available_ram() {
+    grep MemAvailable /proc/meminfo | cut -f2 -d':' | tr -d ' kB'
+}
+
+get_object_size() {
+    du -sk "$1" | cut -f1  # KB
+}
+
+check_ram_availability() {
+    local object_size=$1
+    local available_ram=$(get_available_ram)
+    local required_ram=$((object_size + 800*1024))  # Ensure 800MB remains after loading
+    
+    [ $available_ram -ge $required_ram ]
+}
+
+######################
+# MemLoader Functions
+######################
+
+load_from_path_to_ram() {
+    if [ -e "$1" ]; then
+        local object_size=$(get_object_size "$1")
+        if check_ram_availability $object_size; then
+            ml_vmtouch -dL "$1"
+            # Flush
+            sync
+            echo 3 > /proc/sys/vm/drop_caches
+            return 0
+        else
+            log 2 "Not enough RAM to load $1"
+            return 1
+        fi
+    fi
+}
+
+load_app_in_ram() {
+    if [ -n "$1" ]; then
+        local app_path=$(pm path "$1" | head -n 1 | cut -d: -f2)
+        local app_dir="${app_path%/*}"
+        local object_size=$(get_object_size "$app_dir")
+        if check_ram_availability $object_size; then
+            pkill -f "$1"
+            ml_vmtouch -dL "$app_dir"
+            sync
+            echo 3 > /proc/sys/vm/drop_caches
+            return 0
+        else
+            log 2 "Not enough RAM to load $1"
+            return 1
+        fi
+    fi
+}
+
+unload_from_path() {
+    if [ -e "$1" ]; then
+        pkill -f "ml_vmtouch -dL $1"
+        sync
+        echo 3 > /proc/sys/vm/drop_caches
+    fi
+}
+
+unload_app_from_ram() {
+    if [ -n "$1" ]; then
+        local app_path=$(pm path "$1" | head -n 1 | cut -d: -f2)
+        local app_dir="${app_path%/*}"
+        pkill -f "$1"
+        pkill -f "ml_vmtouch -dL $app_dir"
+        sync
+        echo 3 > /proc/sys/vm/drop_caches
+    fi
+}
+
+#######
+# Menu
+#######
+
+display_memloader_menu() {
+    clear
+
+    echo "MemLoader"
+    echo "========="
+    echo "Version: $(grep_prop "version" "$MODDIR/module.prop" | tr -d 'v')"
+    echo "Author: $(grep_prop "author" "$MODDIR/module.prop")"
+    echo "Description: $(grep_prop "description" "$MODDIR/module.prop")"
+    echo ""
+    echo "1. Load Apps"
+    echo "2. Load from Path"
+    echo "3. Unload Apps"
+    echo "4. Unload from Path"
+    if [ "$(read_config_value load_on_boot)" = "false" ]; then
+        echo "5. Turn On Load on Boot"
+    else
+        echo "5. Turn Off Load on Boot"
+    fi
+    echo "0. Exit"
+    echo ""
+    echo -n "Select desired option: "; read -r option
+    echo ""
+    case "$option" in
+        "1") 
+            echo -n "Give package name of app: "; read -r pkgname
+            if [ -n "$(pm path "$pkgname")" ]; then
+                loaded_apps=$(read_config_value loaded_apps)
+                case "$loaded_apps" in
+                    *"$pkgname"*) 
+                        echo "App already loaded in RAM, skipping..."
+                        sleep 0.5
+                        ;;
+                    *)
+                        echo "Loading $pkgname in RAM..."
+                        log 1 "Loading $pkgname in RAM..."
+                        if load_app_in_ram "$pkgname"; then
+                            if [ -z "$loaded_apps" ]; then
+                                write_config_value "loaded_apps" "$pkgname"
+                            else
+                                write_config_value "loaded_apps" "${loaded_apps},${pkgname}"
+                            fi
+                            echo "Successfully loaded $pkgname in RAM."
+                        else
+                            echo "Failed to load $pkgname in RAM due to insufficient memory."
+                        fi
+                        ;;
+                esac
+            else
+                echo "Invalid package name: $pkgname"
+            fi
+            sleep 2
+            display_memloader_menu
+            ;;
+        "2") 
+            echo "Specify path location completely. Use any root explorer to get full path."
+            echo "Example: /storage/emulated/0/Android/file.txt"
+            echo ""
+            echo -n "Give path: "; read -r obj_path
+            if [ -e "$obj_path" ]; then
+                loaded_paths=$(read_config_value loaded_paths)
+                encoded_path=$(echo -n "$obj_path" | base64 -w 0)  # Base64 encode the path to avoid separator issues
+                case "$loaded_paths" in
+                    *"$encoded_path"*) 
+                        echo "Path already loaded in RAM, skipping..."
+                        sleep 0.5
+                        ;;
+                    *)
+                        echo "Loading $obj_path in RAM..."
+                        log 1 "Loading $obj_path in RAM..."
+                        if load_from_path_to_ram "$obj_path"; then
+                            if [ -z "$loaded_paths" ]; then
+                                write_config_value "loaded_paths" "$encoded_path"
+                            else
+                                write_config_value "loaded_paths" "${loaded_paths},${encoded_path}"
+                            fi
+                            echo "Successfully loaded $obj_path in RAM."
+                        else
+                            echo "Failed to load $obj_path in RAM due to insufficient memory."
+                        fi
+                        ;;
+                esac
+            else
+                echo "No such path: $obj_path"
+            fi
+            sleep 2
+            display_memloader_menu
+            ;;
+        "3") 
+            echo "Currently loaded apps in RAM:"
+            echo "$(read_config_value loaded_apps | tr ',' '\n')"
+            echo ""
+            echo "Copy any app's package name from above and paste it below to unload it from RAM."
+            echo ""
+            echo -n "Give app's package name: "; read -r app_name
+            loaded_apps=$(read_config_value loaded_apps)
+            case "$loaded_apps" in
+                *"$app_name"*) 
+                    echo "Unloading $app_name from RAM..."
+                    log 1 "Unloading $app_name from RAM..."
+                    unload_app_from_ram "$app_name"
+                    new_loaded_apps=$(echo "$loaded_apps" | sed "s|,${app_name},|,|g" | sed "s|^${app_name},||" | sed "s|,${app_name}$||" | sed "s|^${app_name}$||")
+                    write_config_value "loaded_apps" "$new_loaded_apps"
+                    ;;
+                *) 
+                    echo "App isn't loaded in RAM, skipping..." 
+                    sleep 0.5
+                    ;;
+            esac
+            echo "Done!"
+            sleep 2
+            display_memloader_menu
+            ;;
+        "4")
+            echo "Currently loaded paths in RAM:"
+            echo "$(read_config_value loaded_paths | tr ',' '\n' | while read -r encoded_path; do echo "$(echo "$encoded_path" | base64 -d)"; done)"
+            echo ""
+            echo "Copy any path from above and paste it below to unload it from RAM."
+            echo ""
+            echo -n "Give path: "; read -r path_obj
+            loaded_paths=$(read_config_value loaded_paths)
+            encoded_path=$(echo -n "$path_obj" | base64 -w 0)
+            case "$loaded_paths" in
+                *"$encoded_path"*)
+                    echo "Unloading $path_obj from RAM..."
+                    log 1 "Unloading $path_obj from RAM..."
+                    unload_from_path "$path_obj"
+                    new_loaded_paths=$(echo "$loaded_paths" | sed "s|,${encoded_path},|,|g" | sed "s|^${encoded_path},||" | sed "s|,${encoded_path}$||" | sed "s|^${encoded_path}$||")
+                    write_config_value "loaded_paths" "$new_loaded_paths"
+                    ;;
+                *) 
+                    echo "Path isn't loaded in RAM, skipping..." 
+                    sleep 0.5
+                    ;;
+            esac
+            echo "Done!"
+            sleep 2
+            display_memloader_menu
+            ;;
+        "5") 
+            if [ "$(read_config_value load_on_boot)" = "false" ]; then
+                echo "Turning on load on boot option..."
+                log 1 "Turning on load on boot option..."
+                write_config_value "load_on_boot" "true"
+            else
+                echo "Turning off load on boot option..."
+                log 1 "Turning off load on boot option..."
+                write_config_value "load_on_boot" "false"
+                write_config_value "loaded_apps" ""
+                write_config_value "loaded_paths" ""
+            fi
+            echo "Done!"
+            sleep 2
+            display_memloader_menu
+            ;;        
+        "0") 
+            echo "Exited menu."
+            exit 0
+            ;;    
+        *) 
+            echo "Response error, opening menu again..."
+            sleep 2
+            display_memloader_menu
+            ;;
+    esac    
+}
+
+#######
+# Main
+#######
+
+case "$1" in
+    "-i")
+        initialize_essentials
+        start_logging_service
+        load_on_boot_service
+        ;;
+    "-m")
+        display_memloader_menu
+        ;;
+    *)
+        echo "Usage: $0 -m"
+        echo "  -m    Display MemLoader menu"
+        exit 1
+        ;;
+esac

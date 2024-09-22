@@ -1,5 +1,13 @@
 # Changelog
 
+## v0.7.0
+
+- Improved overall code
+- Fixed unload functions to properly evict objects from RAM
+- Added check for RAM availability
+- Simplified menu
+- Misc. improvements
+
 ## v0.6
 
 - Improved menu

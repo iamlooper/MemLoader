@@ -1,31 +1,38 @@
-![XLoad](https://github.com/iamlooper/XLoad/raw/main/xload.jpg)
+![MemLoader Banner](https://github.com/iamlooper/MemLoader/raw/main/memloader_banner.png)
 
-# XLoad
+# MemLoader (formerly XLoad) 💾
 
-Load any android app or file in physical RAM.
+Load objects directly into RAM to reduce I/O operations and improve access speed.
 
-## What is XLoad™ ?
+## Download 📲
 
-**XLoad™** is a magisk module which is capable of locking android files directly into physical RAM which benefits in increasing readahead speeds and better I/O scheduling with no jitters or lags for that specified file.
+[Click here](https://www.pling.com/p/1726993/) to download the latest version of MemLoader.
 
-## How to use it ?
+## Video Tutorial 📹
 
-To open **XLoad™** Menu, use `su -c xload` in Termux and any other terminal emulator. Consider, you are playing a game and game sucks in loading animations and textures and also lags too. Then, just use **XLoad™**, load its data and if it has .obb then load it also. After loading, try to play the game, you will feel smoother animations, fast texture loading and better gameplay experience. Because, using RAM is faster than internal disks. You can also use this in loading music or a movie or anything you want to load in RAM.
+[Click here](https://t.me/loopstuff/130) to watch the tutorial for a step-by-step guide.
 
-## Notes
+## Notes 📝
 
-- It is recommended for those who has 4GB+ RAM. But, low ram users can also load files in RAM keeping in mind the available ram they have and the size of data that file has
+- This is a module, so you will need to flash it. It works on Magisk, KernelSU, and APatch.
+- To open the menu of MemLoader, use `su -c memloader -m` in Termux or any other terminal emulator.
+- It is recommended for those who have 4GB+ RAM. However, low RAM users can also load objects into RAM, provided they consider the available RAM they have and the size of the data in the objects.
+- Keep in mind that the kernel may evict loaded objects from RAM under aggressive RAM usage circumstances or if you are low on RAM.
+- If your device starts to lag after loading objects or during the process of loading, then it is clear that you are low on RAM. To fix this, just reboot your device. All loaded objects will be unloaded, and your device should return to normal.
+- Locking objects into RAM does not increase power consumption. Instead, it decreases power consumption due to the reduction in I/O operations.
 
-- Keep in mind that kernel might kick out loaded data in RAM under aggressive RAM usage circumstances or if you are low on RAM
+## Credits 📜
 
-- Some files may not get loaded due to Scoped Storage introduced in A11+
+### People 👥
 
-- If device starts to lag after loading data or at the process of loading. Then, it is clear that you are on low RAM. To fix it, just reboot your device, all loaded data will get unloaded and your device will be back at normal
+- [Kshitij](https://t.me/Stock_Sucks) (Designer)
+- [Chirag](https://t.me/selfmuser) (Tester)
+- [M. Mustafa DOĞAN](https://t.me/mmdogan)
 
-- Locking android app or file/folder into RAM doesn't increase power consumption. It decreases power consumption due to better I/O scheduling as it is locked in RAM which is faster than internal disks
+### Code Attribution 💻
 
-- Don't provide file paths with spaces i.e /storage/emulated/0/Music/Never Gonna Give Up.mp3, they won't work. Consider, using file paths like /storage/emulated/0/Music/Never_Gonna_Give_Up.mp3
+- [vmtouch](https://github.com/hoytech/vmtouch) (BSD 3-Clause License)
 
-# Download
+## Disclosure 🔓
 
-Go to [here](https://www.pling.com/p/1726993/) to download XLoad™ builds
+[Click here](https://telegra.ph/Disclosure-09-16) to view the disclosure.
