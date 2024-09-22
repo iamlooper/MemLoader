@@ -1,5 +1,6 @@
-id=xload
-name=XLoad
-version=v0.6
-author=iamlooper @ telegram
-description=Load any android app or file in physical RAM to achieve better readahead speed and I/O scheduling for that android app or file
+id=memloader
+name=MemLoader
+version=v0.7.0
+versionCode=7
+author=iamlooper @ github
+description=Load objects directly into RAM to reduce I/O operations and improve access speed.
