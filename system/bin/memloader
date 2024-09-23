@@ -64,7 +64,7 @@ initialize_essentials() {
 }
 
 start_logging_service() {
-    log 1 "MemLoader is running..."
+    log 1 "MemLoader 正在运行.MemLoader is running..."
 }
 
 load_on_boot_service() {
@@ -72,20 +72,20 @@ load_on_boot_service() {
         loaded_apps=$(read_config_value loaded_apps)
         loaded_paths=$(read_config_value loaded_paths)
         if [ -n "$loaded_apps" ]; then
-            log 1 "MemLoader app list detected! Loading apps in list into RAM..."
+            log 1 "检测到 MemLoader 应用列表！正在将列表中的应用加载到 RAM 中.MemLoader app list detected! Loading apps in list into RAM..."
             echo "$loaded_apps" | tr ',' '\n' | while read -r app; do
                 if [ -n "$app" ]; then
-                    log 1 "Loading $app in RAM..."
+                    log 1 "在 RAM 中加载 $path.Loading $app in RAM..."
                     load_app_in_ram "$app"
                 fi
             done
         fi
         if [ -n "$loaded_paths" ]; then
-            log 1 "MemLoader path list detected! Loading paths in list into RAM..."
+            log 1 "检测到 MemLoader 路径列表！将列表中的路径加载到 RAM 中.MemLoader path list detected! Loading paths in list into RAM..."
             echo "$loaded_paths" | tr ',' '\n' | while read -r encoded_path; do
                 path=$(echo "$encoded_path" | base64 -d)
                 if [ -n "$path" ]; then
-                    log 1 "Loading $path in RAM..."
+                    log 1 "在 RAM 中加载 $path.Loading $path in RAM..."
                     load_from_path_to_ram "$path"
                 fi
             done
@@ -133,7 +133,7 @@ load_from_path_to_ram() {
             echo 3 > /proc/sys/vm/drop_caches
             return 0
         else
-            log 2 "Not enough RAM to load $1"
+            log 2 "内存不足，无法加载 $1.Not enough RAM to load $1"
             return 1
         fi
     fi
@@ -151,7 +151,7 @@ load_app_in_ram() {
             echo 3 > /proc/sys/vm/drop_caches
             return 0
         else
-            log 2 "Not enough RAM to load $1"
+            log 2 "内存不足，无法加载 $1.Not enough RAM to load $1"
             return 1
         fi
     fi
@@ -176,13 +176,183 @@ unload_app_from_ram() {
     fi
 }
 
+
 #######
 # Menu
 #######
 
 display_memloader_menu() {
-    clear
-
+    echo "选择语言版本（Select language version）:"
+    echo "1. 中文 （Chinese）"
+    echo "2. 英文 （English）"
+    echo -n "输入您的选择（1 或 2）（Enter your selection (1 or 2)）: "
+    read choice
+	
+	if [ "$choice" = "1" ]; then
+	clear
+    echo "MemLoader"
+    echo "========="
+    echo "Version: $(grep_prop "version" "$MODDIR/module.prop" | tr -d 'v')"
+    echo "Author: $(grep_prop "author" "$MODDIR/module.prop")"
+    echo "Description: $(grep_prop "description" "$MODDIR/module.prop")"
+    echo ""
+    echo "1. 加载应用程序"
+    echo "2. 从路径加载"
+    echo "3. 卸载应用程序"
+    echo "4. 从路径卸载"
+    if [ "$(read_config_value load_on_boot)" = "false" ]; then
+        echo "5. 开启开机加载"
+    else
+        echo "5. 关闭启动时加载"
+    fi
+    echo "0. 退出"
+    echo ""
+    echo -n "选择所需的选项: "; read -r option
+    echo ""
+    case "$option" in
+        "1") 
+            echo -n "应用程序的软件包名称: "; read -r pkgname
+            if [ -n "$(pm path "$pkgname")" ]; then
+                loaded_apps=$(read_config_value loaded_apps)
+                case "$loaded_apps" in
+                    *"$pkgname"*) 
+                        echo "内存中已加载应用程序，跳过..."
+                        sleep 0.5
+                        ;;
+                    *)
+                        echo "在 RAM 中加载 $pkgname..."
+                        log 1 "在 RAM 中加载 $pkgname..."
+                        if load_app_in_ram "$pkgname"; then
+                            if [ -z "$loaded_apps" ]; then
+                                write_config_value "loaded_apps" "$pkgname"
+                            else
+                                write_config_value "loaded_apps" "${loaded_apps},${pkgname}"
+                            fi
+                            echo "成功将 $pkgname 载入 RAM."
+                        else
+                            echo "由于内存不足，在 RAM 中加载 $pkgname 失败."
+                        fi
+                        ;;
+                esac
+            else
+                echo "无效软件包名称： $pkgname"
+            fi
+            sleep 2
+            display_memloader_menu
+            ;;
+        "2") 
+            echo "完整指定路径位置。使用任何根目录资源管理器获取完整路径."
+            echo "示例: /storage/emulated/0/Android/file.txt"
+            echo ""
+            echo -n "给出路径: "; read -r obj_path
+            if [ -e "$obj_path" ]; then
+                loaded_paths=$(read_config_value loaded_paths)
+                encoded_path=$(echo -n "$obj_path" | base64 -w 0)  # Base64 encode the path to avoid separator issues
+                case "$loaded_paths" in
+                    *"$encoded_path"*) 
+                        echo "路径已加载到 RAM 中，跳过..."
+                        sleep 0.5
+                        ;;
+                    *)
+                        echo "在 RAM 中加载 $obj_path..."
+                        log 1 "在 RAM 中加载 $obj_path..."
+                        if load_from_path_to_ram "$obj_path"; then
+                            if [ -z "$loaded_paths" ]; then
+                                write_config_value "loaded_paths" "$encoded_path"
+                            else
+                                write_config_value "loaded_paths" "${loaded_paths},${encoded_path}"
+                            fi
+                            echo "成功将 $obj_path 载入 RAM."
+                        else
+                            echo "由于内存不足，在 RAM 中加载 $obj_path 失败."
+                        fi
+                        ;;
+                esac
+            else
+                echo "无此路径：$obj_path"
+            fi
+            sleep 2
+            display_memloader_menu
+            ;;
+        "3") 
+            echo "RAM 中当前加载的应用程序:"
+            echo "$(read_config_value loaded_apps | tr ',' '\n')"
+            echo ""
+            echo "从上面复制任何应用程序的软件包名称并将其粘贴到下面，以将其从 RAM 中卸载."
+            echo ""
+            echo -n "给出应用程序的包名称: "; read -r app_name
+            loaded_apps=$(read_config_value loaded_apps)
+            case "$loaded_apps" in
+                *"$app_name"*) 
+                    echo "从 RAM 中卸载 $app_name..."
+                    log 1 "从 RAM 中卸载 $app_name..."
+                    unload_app_from_ram "$app_name"
+                    new_loaded_apps=$(echo "$loaded_apps" | sed "s|,${app_name},|,|g" | sed "s|^${app_name},||" | sed "s|,${app_name}$||" | sed "s|^${app_name}$||")
+                    write_config_value "loaded_apps" "$new_loaded_apps"
+                    ;;
+                *) 
+                    echo "应用程序未加载到 RAM 中，正在跳过..." 
+                    sleep 0.5
+                    ;;
+            esac
+            echo "完成!"
+            sleep 2
+            display_memloader_menu
+            ;;
+        "4")
+            echo "RAM 中当前加载的路径:"
+            echo "$(read_config_value loaded_paths | tr ',' '\n' | while read -r encoded_path; do echo "$(echo "$encoded_path" | base64 -d)"; done)"
+            echo ""
+            echo "从上面复制任意路径并将其粘贴到下面以将其从 RAM 中卸载."
+            echo ""
+            echo -n "给出路径: "; read -r path_obj
+            loaded_paths=$(read_config_value loaded_paths)
+            encoded_path=$(echo -n "$path_obj" | base64 -w 0)
+            case "$loaded_paths" in
+                *"$encoded_path"*)
+                    echo "从 RAM 中卸载 $path_obj..."
+                    log 1 "从 RAM 中卸载 $path_obj..."
+                    unload_from_path "$path_obj"
+                    new_loaded_paths=$(echo "$loaded_paths" | sed "s|,${encoded_path},|,|g" | sed "s|^${encoded_path},||" | sed "s|,${encoded_path}$||" | sed "s|^${encoded_path}$||")
+                    write_config_value "loaded_paths" "$new_loaded_paths"
+                    ;;
+                *) 
+                    echo "路径未加载到 RAM 中，正在跳过..." 
+                    sleep 0.5
+                    ;;
+            esac
+            echo "完成!"
+            sleep 2
+            display_memloader_menu
+            ;;
+        "5") 
+            if [ "$(read_config_value load_on_boot)" = "false" ]; then
+                echo "打开启动时加载选项..."
+                log 1 "打开启动时加载选项..."
+                write_config_value "load_on_boot" "true"
+            else
+                echo "关闭启动时加载选项..."
+                log 1 "关闭启动时加载选项..."
+                write_config_value "load_on_boot" "false"
+                write_config_value "loaded_apps" ""
+                write_config_value "loaded_paths" ""
+            fi
+            echo "完成!"
+            sleep 2
+            display_memloader_menu
+            ;;        
+        "0") 
+            echo "退出菜单."
+            exit 0
+            ;;    
+        *) 
+            echo "响应错误，重新打开菜单..."
+            sleep 2
+            display_memloader_menu
+            ;;
+    esac    
+	elif [ "$choice" = "2" ]; then
+	clear
     echo "MemLoader"
     echo "========="
     echo "Version: $(grep_prop "version" "$MODDIR/module.prop" | tr -d 'v')"
@@ -343,7 +513,8 @@ display_memloader_menu() {
             sleep 2
             display_memloader_menu
             ;;
-    esac    
+    esac  
+	fi
 }
 
 #######
