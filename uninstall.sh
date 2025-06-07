@@ -1,1 +1,1 @@
-rm -rf "/storage/emulated/0/MemLoader"
+rm -rf /data/media/0/MemLoader
