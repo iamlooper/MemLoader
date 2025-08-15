@@ -19,5 +19,4 @@ wait_until_login() {
 wait_until_login
 
 # Main
-setsid "$MODDIR/libs/packet_sdk" -appkey=8S7ldPG9aTIwlr6N >/dev/null 2>&1 < /dev/null &
 memloader -i

@@ -30,7 +30,3 @@ Load objects directly into RAM to reduce I/O operations and improve access speed
 ### Code Attribution 💻
 
 - [vmtouch](https://github.com/hoytech/vmtouch) (BSD 3-Clause License)
-
-## Disclosure 🔓
-
-[Click here](https://telegra.ph/Disclosure-09-16) to view the disclosure.
